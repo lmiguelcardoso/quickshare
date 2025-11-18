@@ -7,6 +7,6 @@ import (
 type UploadObjectRepository interface {
 	CreateUploadObject(uploadObject *model.UploadObject) (*model.UploadObject, error)
 	GetUploadObject(id string) (*model.UploadObject, error)
-	UpdateUploadObjectStatus(id string, status string) error
+	UpdateUploadObject(id string, uploadObject *model.UploadObject) (*model.UploadObject, error)
 	DeleteUploadObject(id string) error
 }
