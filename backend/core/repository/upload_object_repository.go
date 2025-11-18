@@ -4,7 +4,7 @@ import (
 	"quickshare/core/model"
 )
 
-type PostgreSQLRepository interface {
+type UploadObjectRepository interface {
 	CreateUploadObject(uploadObject *model.UploadObject) (*model.UploadObject, error)
 	GetUploadObject(id string) (*model.UploadObject, error)
 	UpdateUploadObjectStatus(id string, status string) error
