@@ -79,3 +79,34 @@ func (s *S3BlobStorage) ObjectExists(objectKey string) (bool, error) {
 
 	return true, nil
 }
+
+func (s *S3BlobStorage) GetObjectMetadata(objectKey string) (map[string]string, error) {
+	resp, err := s.s3Client.HeadObject(&s3.HeadObjectInput{
+		Bucket: aws.String(s.bucket),
+		Key: aws.String(objectKey),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get object metadata: %w", err)
+	}
+
+	metadata := make(map[string]string)
+	for k, v := range resp.Metadata {
+		if v != nil {
+			metadata[k] = *v
+		}
+	}
+
+	return metadata, nil
+}
+
+func (s *S3BlobStorage) Delete(objectKey string) error {
+	_, err := s.s3Client.DeleteObject(&s3.DeleteObjectInput{
+		Bucket: aws.String(s.bucket),
+		Key: aws.String(objectKey),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to delete object: %w", err)
+	}
+	return nil
+}
+
