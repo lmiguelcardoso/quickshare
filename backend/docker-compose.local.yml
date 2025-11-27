@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-quickshare}
+      DB_PASSWORD: ${DB_PASSWORD:-quickshare}
+      DB_NAME: ${DB_NAME:-quickshare}
+      PORT: ${PORT:-3000}
+      AWS_REGION: ${AWS_REGION:-us-east-2}
+      AWS_BUCKET_NAME: ${AWS_BUCKET_NAME:-quickshare-assets}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: ${DB_USER:-quickshare}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-quickshare}
+      POSTGRES_DB: ${DB_NAME:-quickshare}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  db_data:
+
+
+
+

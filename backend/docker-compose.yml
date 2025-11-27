@@ -2,31 +2,6 @@ version: '3'
 
 services:
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: quickshare-backend
     ports:
-      - "3000:3000"
-    environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: quickshare
-      PORT: :3000
-    depends_on:
-      - postgres
-
-  postgres:
-    image: postgres:16
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: quickshare
-    volumes:
-      - db_data:/var/lib/postgresql/data
-
-volumes:
-  db_data:
+      - "${PORT:-3000}:3000"
