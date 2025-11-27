@@ -7,34 +7,39 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 
 type S3BlobStorage struct {
-	s3Client  *s3.S3
-	bucket    string
-	baseURL   string
-	uploadDir string
+	s3Client *s3.S3
+	bucket   string
+	region   string
 }
 
-
-func NewS3BlobStorage(s3Client *s3.S3, bucket string, baseURL string, uploadDir string) *S3BlobStorage {
-	sess, err := session.NewSession(&aws.Config{
-    Region: aws.String("us-west-2"),
-	})
-
-	if err != nil {
-		log.Fatalf("failed to create session: %v", err)
+func NewS3BlobStorage(region, bucket, accessKeyID, secretAccessKey string) (*S3BlobStorage, error) {
+	awsConfig := &aws.Config{
+		Region: aws.String(region),
 	}
+
+	if accessKeyID != "" && secretAccessKey != "" {
+		awsConfig.Credentials = credentials.NewStaticCredentials(accessKeyID, secretAccessKey, "")
+	}
+
+	sess, err := session.NewSession(awsConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create AWS session: %w", err)
+	}
+
+	log.Printf("S3 connection established: region=%s, bucket=%s", region, bucket)
 
 	return &S3BlobStorage{
 		s3Client: s3.New(sess),
-		bucket: bucket,
-		baseURL: baseURL,
-		uploadDir: uploadDir,
-	}
+		bucket:   bucket,
+		region:   region,
+	}, nil
 }
 
 func (s *S3BlobStorage) GeneratePresignedUploadURL(objectKey string, expiresIn time.Duration) (string, error){
@@ -56,7 +61,7 @@ func (s *S3BlobStorage) GeneratePresignedUploadURL(objectKey string, expiresIn t
 }
 
 func (s *S3BlobStorage) GetPublicURL(objectKey string) string {
-	return fmt.Sprintf("%s/%s", s.baseURL, objectKey)
+	return fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", s.bucket, s.region, objectKey)
 }
 
 func (s *S3BlobStorage) ObjectExists(objectKey string) (bool, error) {
