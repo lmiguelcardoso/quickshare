@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	httphandler "quickshare/adapter/http"
+	"quickshare/adapter/repository"
+	"quickshare/core/service"
 	"quickshare/internal/config"
 	"time"
 
@@ -15,22 +17,43 @@ import (
 
 func main() {
 	cfg := config.NewConfig()
-	
+
 	log.Println("Starting QuickShare Backend...")
 	log.Printf("Environment detected: DB_HOST=%s", cfg.DBConfig.DBHost)
 
-	if cfg.ServerConfig.Port == ":3000" {
-		db := connectWithRetry(cfg, 5, 3*time.Second)
+	var db *sql.DB
+	if cfg.ServerConfig.Port == "3000" {
+		db = connectWithRetry(cfg, 5, 3*time.Second)
 		defer db.Close()
 	}
 
-	handler := httphandler.NewHandler()
+	// Initialize repositories
+	postgresRepo := repository.NewPostgreSQLRepository(db)
+	
+	s3BlobStorage, err := repository.NewS3BlobStorage(
+		cfg.S3Config.Region,
+		cfg.S3Config.Bucket,
+		cfg.S3Config.AccessKeyID,
+		cfg.S3Config.SecretAccessKey,
+	)
+	if err != nil {
+		log.Fatal("Failed to initialize S3:", err)
+	}
+
+	// Initialize service
+	uploadObjectService := service.NewUploadObjectService(postgresRepo, s3BlobStorage)
+
+	// Initialize handlers
+	uploadObjectHandler := httphandler.NewUploadObjectHandler(uploadObjectService)
+	handler := httphandler.NewHandler(uploadObjectHandler)
+
+	// Setup routes
 	router := mux.NewRouter()
 	handler.RegisterRoutes(router)
 
 	log.Printf("Server is running on port %s", cfg.ServerConfig.Port)
 
-	if err := http.ListenAndServe(cfg.ServerConfig.Port, router); err != nil {
+	if err := http.ListenAndServe(":" + cfg.ServerConfig.Port, router); err != nil {
 		log.Fatal("Server failed to start:", err)
 	}
 }

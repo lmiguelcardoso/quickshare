@@ -6,12 +6,14 @@ import (
 	"github.com/gorilla/mux"
 )
 
-
 type handler struct {
+	uploadObjectHandler *UploadObjectHandler
 }
 
-func NewHandler() *handler {
-	return &handler{}
+func NewHandler(uploadObjectHandler *UploadObjectHandler) *handler {
+	return &handler{
+		uploadObjectHandler: uploadObjectHandler,
+	}
 }
 
 func (h *handler) Hello(w http.ResponseWriter, r *http.Request) {
@@ -20,5 +22,6 @@ func (h *handler) Hello(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) RegisterRoutes(router *mux.Router) {
-	router.HandleFunc("/", h.Hello).Methods("GET")
+	router.HandleFunc("/health", h.Hello).Methods("GET")
+	router.HandleFunc("/upload", h.uploadObjectHandler.UploadObject).Methods("POST")
 }
