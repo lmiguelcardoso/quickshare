@@ -69,3 +69,28 @@ func (h *UploadObjectHandler) ConfirmUpload(w http.ResponseWriter, r *http.Reque
 		"status": "completed",
 	})
 }
+
+// Download retorna uma URL de download para um upload já concluído
+func (h *UploadObjectHandler) Download(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	if id == "" {
+		web.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "missing upload id"})
+		return
+	}
+
+	log.Println("generating download URL for id", id)
+
+	downloadURL, err := h.uploadObjectService.GetDownloadURL(id)
+	if err != nil {
+		log.Println("error generating download URL", err)
+		web.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+
+	web.WriteJSON(w, http.StatusOK, map[string]string{
+		"id":           id,
+		"download_url": downloadURL,
+	})
+}
