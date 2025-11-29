@@ -24,4 +24,5 @@ func (h *handler) Hello(w http.ResponseWriter, r *http.Request) {
 func (h *handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/health", h.Hello).Methods("GET")
 	router.HandleFunc("/upload", h.uploadObjectHandler.UploadObject).Methods("POST")
+	router.HandleFunc("/upload/{id}/confirm", h.uploadObjectHandler.ConfirmUpload).Methods("POST")
 }

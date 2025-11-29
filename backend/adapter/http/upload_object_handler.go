@@ -7,6 +7,8 @@ import (
 	"quickshare/core/service"
 	web "quickshare/pkg"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 type uploadObjectRequest struct {
@@ -43,4 +45,27 @@ func (h *UploadObjectHandler) UploadObject(w http.ResponseWriter, r *http.Reques
 	}
 
 	web.WriteJSON(w, http.StatusOK, uploadResponse)
+}
+
+func (h *UploadObjectHandler) ConfirmUpload(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	if id == "" {
+		web.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "missing upload id"})
+		return
+	}
+
+	log.Println("confirming upload for id", id)
+
+	if err := h.uploadObjectService.ConfirmUpload(id); err != nil {
+		log.Println("error confirming upload", err)
+		web.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+
+	web.WriteJSON(w, http.StatusOK, map[string]string{
+		"id":     id,
+		"status": "completed",
+	})
 }
