@@ -27,7 +27,7 @@ func NewUploadObjectHandler(uploadObjectService *service.UploadObjectService) *U
 }
 
 func (h *UploadObjectHandler) UploadObject(w http.ResponseWriter, r *http.Request) {
-	var uploadObject model.UploadObject
+	var uploadObject uploadObjectRequest
 	
 	log.Println("starting upload object", uploadObject.FileName)
 
@@ -37,7 +37,15 @@ func (h *UploadObjectHandler) UploadObject(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	uploadResponse, err := h.uploadObjectService.InitiateUpload(&uploadObject)
+	uploadObjectModel := model.UploadObject{
+		FileName: uploadObject.FileName,
+		FileSize: uploadObject.FileSize,
+		MimeType: uploadObject.MimeType,
+		ExpiresAt: uploadObject.ExpiresAt,
+		Status: "pending",
+	}
+
+	uploadResponse, err := h.uploadObjectService.InitiateUpload(&uploadObjectModel)
 	if err != nil {
 		log.Println("error initiating upload", err)
 		web.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to initiate upload"})
