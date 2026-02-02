@@ -64,3 +64,12 @@ tidy:
 db-shell:
 	docker-compose exec postgres psql -U postgres -d quickshare
 
+db-migrate:
+	@echo "Rodando migrations no banco..."
+	docker-compose -f docker-compose.local.yml exec -T postgres sh -c '\
+	  for f in /migrations/*.sql; do \
+	    echo ">>> Executando $$f"; \
+	    psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -f "$$f"; \
+	  done \
+	'
+
